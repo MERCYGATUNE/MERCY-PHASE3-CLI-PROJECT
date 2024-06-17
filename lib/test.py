@@ -1,4 +1,5 @@
 import os
+import sys
 import sqlite3
 from datetime import datetime, timedelta
 import smtplib
@@ -41,6 +42,7 @@ def create_tables(cursor):
                 email TEXT,
                 party_size INTEGER,
                 reservation_time DATETIME,
+                table_number INTEGER,
                 status TEXT,
                 FOREIGN KEY(user_id) REFERENCES users(id),
                 FOREIGN KEY(restaurant_id) REFERENCES restaurants(id),
@@ -62,8 +64,7 @@ def create_tables(cursor):
             CREATE TABLE IF NOT EXISTS available_slots (
                 id INTEGER PRIMARY KEY,
                 location_id INTEGER,
-                reservation_time DATETIME,
-                FOREIGN KEY(location_id) REFERENCES locations(id)
+                reservation_time DATETIME
             )
         ''')
 
@@ -150,18 +151,6 @@ def cancel_reservation(cursor, reservation_id):
         return True
     except sqlite3.Error as e:
         print("Error cancelling reservation:", e)
-        return False
-
-# Function to delete a reservation
-def delete_reservation(cursor, reservation_id):
-    try:
-        cursor.execute('''
-            DELETE FROM reservations
-            WHERE id = ?
-        ''', (reservation_id,))
-        return True
-    except sqlite3.Error as e:
-        print("Error deleting reservation:", e)
         return False
 
 # Function to add available slot
@@ -281,14 +270,14 @@ def view_best_restaurants(cursor):
         print("Error fetching best restaurants:", e)
 
 # Function to find best restaurants in a location
-def find_best_restaurants(cursor, location_id):
+def find_best_restaurants(cursor, location_name):
     try:
         cursor.execute('''
-            SELECT r.restaurant_type, COUNT(res.id) AS reservation_count
+            SELECT r.restaurant_type, COUNT(r.id) AS reservation_count
             FROM restaurants AS r
             LEFT JOIN reservations AS res ON r.id = res.restaurant_id
             WHERE res.location_id = ?
-            GROUP BY r.restaurant_type
+            GROUP BY r.id
             ORDER BY reservation_count DESC
             LIMIT 5
         ''', (location_id,))
@@ -326,7 +315,7 @@ def show_reservations(cursor):
         reservations = cursor.fetchall()
         if reservations:
             for res in reservations:
-                print(f"Reservation ID: {res[0]}, User ID: {res[1]}, Restaurant ID: {res[2]}, Location ID: {res[3]}, Name: {res[4]}, Phone: {res[5]}, Email: {res[6]}, Party Size: {res[7]}, Time: {res[8]}, Status: {res[9]}")
+                print(f"Reservation ID: {res[0]}, User ID: {res[1]}, Restaurant ID: {res[2]}, Location ID: {res[3]}, Name: {res[4]}, Phone: {res[5]}, Email: {res[6]}, Party Size: {res[7]}, Time: {res[8]}, Status: {res[10]}")
         else:
             print("No reservations found.")
     except sqlite3.Error as e:
@@ -349,36 +338,6 @@ def get_restaurant_id(cursor, restaurant_type, location):
         print("Error getting restaurant ID:", e)
         return None
 
-# Function to get the location ID based on location name
-def get_location_id(cursor, location_name):
-    try:
-        cursor.execute('''
-            SELECT id FROM locations
-            WHERE name = ?
-        ''', (location_name,))
-        location = cursor.fetchone()
-        if location:
-            return location[0]
-        else:
-            print("Location not found.")
-            return None
-    except sqlite3.Error as e:
-        print("Error getting location ID:", e)
-        return None
-
-# Function to submit feedback
-def submit_feedback(cursor, user_id, feedback_message):
-    try:
-        submission_time = datetime.now()
-        cursor.execute('''
-            INSERT INTO feedback (user_id, message, submission_time)
-            VALUES (?, ?, ?)
-        ''', (user_id, feedback_message, submission_time))
-        return True
-    except sqlite3.Error as e:
-        print("Error submitting feedback:", e)
-        return False
-
 # Placeholder data for testing
 if __name__ == "__main__":
     print("Welcome to Rave! The Restaurant Reservation System!")
@@ -390,25 +349,23 @@ if __name__ == "__main__":
         cursor = conn.cursor()
 
         create_tables(cursor)
-        user_id = None
 
         while True:
             print("\nRave Restaurant Reservation System")
             print("1. Register")
             print("2. Login")
             print("3. Make a reservation")
-            print("4. Confirm a reservation")
-            print("5. Cancel a reservation")
-            print("6. Delete a reservation")
-            print("7. View reservations")
-            print("8. Provide Feedback")
-            print("9. View available reservation slots")
-            print("10. View feedback")
-            print("11. Add a new restaurant")
-            print("12. Add a new location")
-            print("13. View best restaurants")
-            print("14. Find the best restaurants in a location")
-            print("15. Exit")
+            print("4. Adjust a reservation")
+            print("5. View reservations")
+            print("6. Provide Feedback")
+            print("7. Delete a reservation")
+            print("8. View available reservation slots")
+            print("9. View feedback")
+            print("10. Add a new restaurant")
+            print("11. Add a new location")
+            print("12. View best restaurants")
+            print("13. Find the best restaurants in this location")
+            print("14. Exit")
             choice = input("Enter your choice: ")
 
             if choice == '1':
@@ -451,96 +408,57 @@ if __name__ == "__main__":
                     print("Please login to make a reservation.")
 
             elif choice == '4':
-                if user_id:
-                    reservation_id = input("Enter the reservation ID to confirm: ")
-                    if confirm_reservation(cursor, reservation_id):
-                        conn.commit()
-                        print("Reservation confirmed successfully!")
-                    else:
-                        print("Failed to confirm reservation.")
-                else:
-                    print("Please login to confirm a reservation.")
+                # Implement adjust reservation functionality
+                pass
 
             elif choice == '5':
-                if user_id:
-                    reservation_id = input("Enter the reservation ID to cancel: ")
-                    if cancel_reservation(cursor, reservation_id):
-                        conn.commit()
-                        print("Reservation cancelled successfully!")
-                    else:
-                        print("Failed to cancel reservation.")
-                else:
-                    print("Please login to cancel a reservation.")
+                show_reservations(cursor)
 
             elif choice == '6':
-                if user_id:
-                    reservation_id = input("Enter the reservation ID to delete: ")
-                    if delete_reservation(cursor, reservation_id):
-                        conn.commit()
-                        print("Reservation deleted successfully!")
-                    else:
-                        print("Failed to delete reservation.")
-                else:
-                    print("Please login to delete a reservation.")
+                name = input("Enter your name: ")
+                email = input("Enter your email: ")
+                message = input("Enter your feedback message: ")
+                if collect_feedback(cursor, name, email, message):
+                    conn.commit()
+                    print("Thank you for your feedback!")
 
             elif choice == '7':
-                if user_id:
-                    show_reservations(cursor)
-                else:
-                    print("Please login to view reservations.")
+                # Implement delete reservation functionality
+                pass
 
             elif choice == '8':
-                if user_id:
-                    feedback_message = input("Enter your feedback: ")
-                    if submit_feedback(cursor, user_id, feedback_message):
-                        conn.commit()
-                        print("Feedback submitted successfully!")
-                else:
-                    print("Please login to provide feedback.")
-
-            elif choice == '9':
                 view_available_slots(cursor)
 
-            elif choice == '10':
+            elif choice == '9':
                 view_feedback(cursor)
 
+            elif choice == '10':
+                restaurant_type = input("Enter restaurant type: ")
+                location = input("Enter location: ")
+                if add_new_restaurant(cursor, restaurant_type, location):
+                    conn.commit()
+                    print("New restaurant added successfully!")
+
             elif choice == '11':
-                if user_id:
-                    restaurant_type = input("Enter the type of restaurant: ")
-                    location = input("Enter the location: ")
-                    if add_new_restaurant(cursor, restaurant_type, location):
-                        conn.commit()
-                        print("Restaurant added successfully!")
-                else:
-                    print("Please login to add a new restaurant.")
+                location_name = input("Enter location name: ")
+                if add_new_location(cursor, location_name):
+                    conn.commit()
+                    print("New location added successfully!")
 
             elif choice == '12':
-                if user_id:
-                    location_name = input("Enter the name of location: ")
-                    if add_new_location(cursor, location_name):
-                        conn.commit()
-                        print("Location added successfully!")
-                else:
-                    print("Please login to add a new location.")
-
-            elif choice == '13':
                 view_best_restaurants(cursor)
 
-            elif choice == '14':
-                location_name = input("Enter the location to find best restaurants: ")
-                location_id = get_location_id(cursor, location_name)
-                if location_id:
-                    find_best_restaurants(cursor, location_id)
+            elif choice == '13':
+                location_name = input("Enter location name: ")
+                find_best_restaurants(cursor, location_name)
 
-            elif choice == '15':
-                print("Thank you for using Rave! Exiting...")
-                break
+            elif choice == '14':
+                print("Exiting...")
+                conn.close()
+                sys.exit()
 
             else:
-                print("Invalid choice. Please enter a number between 1 and 15.")
+                print("Invalid choice. Please try again.")
 
     except sqlite3.Error as e:
         print("SQLite error:", e)
-    finally:
-        if 'conn' in locals():
-            conn.close()
