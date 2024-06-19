@@ -1,31 +1,26 @@
-# Pha
+# RAVE Restaurant Reservation CLI
 
+## BY Mercy Gatune
 
+# Date 2024/06/18
 
-## Generating Your Pipenv
+# Description
+This is a simple CLI application to manage restaurant reservations. The application uses SQLite for data persistence.
 
-You might have noticed in the file structure- there's already a Pipfile! That
-being said, we haven't put much in there- just Python version 3.8 and ipdb.
+## Setup
 
-Install any dependencies you know you'll need for your project, like SQLAlchemy
-and Alembic, before you begin. You can do this straight from the command line:
+1. Install dependencies using Pipenv:
+    ```sh
+    pipenv install
+    ```
 
-```console
-$ pipenv install sqlalchemy alembic
-```
+2. Activate the virtual environment:
+    ```sh
+    pipenv shell
+    ```
 
-From here, you should run your second commit:
+## Usage
 
-```console
-$ git add Pipfile Pipfile.lock
-$ git commit -m'add sqlalchemy and alembic to pipenv'
-$ git push
-```
-
-Now that your environment is set up, run `pipenv shell` to enter it.
-
-***
-
-
-
-
+Run the CLI:
+```sh
+python lib/cli.py
