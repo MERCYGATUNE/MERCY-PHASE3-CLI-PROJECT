@@ -1,4 +1,5 @@
 from models import Database, Reservation, Feedback, Restaurant, Location, User, AvailableSlot, BestRestaurant
+from tabulate import tabulate
 
 def add_reservation_cmd():
     name = input("Enter name: ")
@@ -13,26 +14,23 @@ def add_reservation_cmd():
     
     reservation_model.add(name, party_size, reservation_time, phone_number, table_number, email, restaurant_id, location_id, user_id)
     print("Reservation added successfully.")
-    
+
 def find_reservation_cmd():
     reservation_id = int(input("Enter reservation ID: "))
     reservation = reservation_model.find(reservation_id)
     if reservation:
-        format_str="{:<20} {}"
-        
-        print(f"Reservation details:")
-        print(f"ID: {reservation[0]}")
-        print(f"Name: {reservation[1]}")
-        print(f"Party Size: {reservation[2]}")
-        print(f"Reservation Time: {reservation[3]}")
-        print(f"Phone Number: {reservation[4]}")
-        print(f"Table Number: {reservation[5]}")
-        print(f"Email: {reservation[6]}")
-        print(f"Restaurant ID: {reservation[7]}")
-        print(f"Location ID: {reservation[8]}")
-        print(f"User ID: {reservation[9]}")
+        headers = ["ID", "Name", "Party Size", "Reservation Time", "Phone Number", "Table Number", "Email", "Restaurant ID", "Location ID", "User ID"]
+        formatted_reservation = [
+            (reservation[0], reservation[1], reservation[2], reservation[3], reservation[4], reservation[5], reservation[6], reservation[7], reservation[8], reservation[9])
+        ]
+        print(tabulate(formatted_reservation, headers=headers, tablefmt="fancy_grid"))
     else:
         print(f"Reservation with ID {reservation_id} not found.")
+
+def delete_reservation_cmd():
+    reservation_id = int(input("Enter reservation ID to delete: "))
+    reservation_model.delete(reservation_id)
+    print(f"Reservation with ID {reservation_id} deleted successfully.")
 
 def add_feedback_cmd():
     name = input("Enter your name: ")
@@ -53,33 +51,33 @@ def add_restaurant_cmd():
 def show_reservations_cmd():
     reservations = reservation_model.show_all()
     if reservations:
-        header = "{:<5} {:<15} {:<10} {:<20} {:<15} {:<12} {:<25} {:<15} {:<15} {:<10}".format(
-            "ID", "Name", "Party Size", "Reservation Time", "Phone Number", "Table Number", "Email", "Restaurant ID", "Location ID", "User ID"
-        )
-        
-        print(header)
-        print("="*130)  # Separator line
- 
-        for reservation in reservations:
-             print("{:<5} {:<15} {:<10} {:<20} {:<15} {:<12} {:<25} {:<15} {:<15} {:<10}".format(
-                reservation[0], reservation[1], reservation[2], reservation[3], reservation[4], reservation[5], reservation[6], reservation[7], reservation[8], reservation[9]
-            ))
+        headers = ["ID", "Name", "Party Size", "Reservation Time", "Phone Number", "Table Number", "Email", "Restaurant ID", "Location ID", "User ID"]
+        formatted_reservations = [
+            (r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9]) for r in reservations
+        ]
+        print(tabulate(formatted_reservations, headers=headers, tablefmt="fancy_grid"))
     else:
         print("No reservations found.")
 
 def show_feedback_cmd():
     feedbacks = feedback_model.show_all()
     if feedbacks:
-        for feedback in feedbacks:
-            print(feedback)
+        headers = ["ID", "Name", "Email", "Message", "Submission Time"]
+        formatted_feedbacks = [
+            (f[0], f[1], f[2], f[3], f[4]) for f in feedbacks
+        ]
+        print(tabulate(formatted_feedbacks, headers=headers, tablefmt="fancy_grid"))
     else:
         print("No feedback found.")
 
 def show_restaurants_cmd():
     restaurants = restaurant_model.show_all()
     if restaurants:
-        for restaurant in restaurants:
-            print(restaurant)
+        headers = ["ID", "Restaurant Type", "Location"]
+        formatted_restaurants = [
+            (r[0], r[1], r[2]) for r in restaurants
+        ]
+        print(tabulate(formatted_restaurants, headers=headers, tablefmt="fancy_grid"))
     else:
         print("No restaurants found.")
 
@@ -91,8 +89,11 @@ def add_location_cmd():
 def show_locations_cmd():
     locations = location_model.show_all()
     if locations:
-        for location in locations:
-            print(location)
+        headers = ["ID", "Name"]
+        formatted_locations = [
+            (l[0], l[1]) for l in locations
+        ]
+        print(tabulate(formatted_locations, headers=headers, tablefmt="fancy_grid"))
     else:
         print("No locations found.")
 
@@ -105,8 +106,11 @@ def add_user_cmd():
 def show_users_cmd():
     users = user_model.show_all()
     if users:
-        for user in users:
-            print(user)
+        headers = ["ID", "Username", "Password"]
+        formatted_users = [
+            (u[0], u[1], u[2]) for u in users
+        ]
+        print(tabulate(formatted_users, headers=headers, tablefmt="fancy_grid"))
     else:
         print("No users found.")
 
@@ -119,8 +123,11 @@ def add_available_slot_cmd():
 def show_available_slots_cmd():
     available_slots = available_slot_model.show_all()
     if available_slots:
-        for slot in available_slots:
-            print(slot)
+        headers = ["ID", "Location ID", "Reservation Time"]
+        formatted_slots = [
+            (s[0], s[1], s[2]) for s in available_slots
+        ]
+        print(tabulate(formatted_slots, headers=headers, tablefmt="fancy_grid"))
     else:
         print("No available slots found.")
 
@@ -134,8 +141,11 @@ def add_best_restaurant_cmd():
 def show_best_restaurants_cmd():
     best_restaurants = best_restaurant_model.show_all()
     if best_restaurants:
-        for restaurant in best_restaurants:
-            print(restaurant)
+        headers = ["ID", "Location ID", "Restaurant Type", "Reservation Count"]
+        formatted_restaurants = [
+            (r[0], r[1], r[2], r[3]) for r in best_restaurants
+        ]
+        print(tabulate(formatted_restaurants, headers=headers, tablefmt="fancy_grid"))
     else:
         print("No best restaurants found.")
 
@@ -183,7 +193,7 @@ def main():
         elif choice == "3":
             find_reservation_cmd()
         elif choice == "4":
-          delete_reservation_cmd()
+            delete_reservation_cmd()
         elif choice == "5":
             add_feedback_cmd()
         elif choice == "6":
@@ -213,3 +223,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
